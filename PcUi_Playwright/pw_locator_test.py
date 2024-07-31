@@ -1,4 +1,5 @@
-from playwright.sync_api import expect,Page
+from playwright.async_api import Playwright
+from playwright.sync_api import expect, Page
 
 
 
@@ -33,7 +34,7 @@ def test_get_by_role(page: Page):
 
     grid:表示网格布局,用于显示表格或类似的数据布局
 
-    gridcell: 表示网格单元格 是grid角色中的子元素
+    grid cell: 表示网格单元格 是grid角色中的子元素
 
     group:表示组合框,用于将相关的元素组合在一起
 
@@ -71,11 +72,11 @@ def test_get_by_role(page: Page):
 
     scrollbar:表示滚动条，用于在内容超出显示区域时提供滚动功能
     """
-    page.goto("/demo/dialog",wait_until="networkidle")
+    page.goto("/demo/dialog", wait_until="networkidle")
     page.get_by_text("点我开启一个dialog").click()
     # 通过get_by_role去断言元素是否存在
     expect(page.get_by_role(role="dialog")).to_be_visible()
-    page.goto("/demo/checkbox",wait_until="networkidle")
+    page.goto("/demo/checkbox", wait_until="networkidle")
     # 里面参数可以直接根据元素状态取值,
     page.get_by_role("checkbox", name="开发", checked=False).set_checked(True)
     page.get_by_role("checkbox", name="开发", checked=True).set_checked(False)
@@ -89,7 +90,6 @@ def test_get_by_role(page: Page):
     # filter(has_text="溜达王")这个元素里面包含的文字,定位到元素,, locator("div").nth(1)取这一行里面的第几个
     expect(page.get_by_role("row").filter(has_text="丫丫").locator("div").nth(0)).to_have_text("丫丫")
 
-
 def test_get_by_text(page: Page):
     """
     以下规则使用条件: 参数中包含exact
@@ -98,5 +98,41 @@ def test_get_by_text(page: Page):
     3:exact可以精确匹配
     4:可以匹配正则表达式
     """
-    page.goto("/demo/getbytext",wait_until="networkidle")
-    page
+    page.goto("/demo/getbytext", wait_until="networkidle")
+    expect(page.get_by_text("确定")).to_have_count(3)
+    # 精确查找
+    expect(page.get_by_text("确定",exact=True)).to_have_count(2)
+    expect(page.get_by_text("确定 确认 肯定")).to_have_count(1)
+
+def test_get_by_label(page: Page):
+    page.goto("/demo/input", wait_until="networkidle")
+    #     def get_by_label(
+    #         self,
+    #         text: typing.Union[str, typing.Pattern[str]],
+    #         *,
+    #         exact: typing.Optional[bool] = None
+    #     ) 也支持exact 即模糊输入 也一样支持
+    page.get_by_label("任何文字").fill("12312321")
+
+def test_get_by_placeholder(page: Page):
+    page.goto("/demo/input", wait_until="networkidle")
+    page.get_by_placeholder("我是另一个").fill("123123")
+    assert page.get_by_placeholder("我是另一个").input_value() =="123123"
+
+def test_get_by_title(page: Page):
+    page.goto("/demo/image", wait_until="networkidle")
+    expect(page.get_by_title("这是一个title")).to_be_visible()
+
+
+def test_get_by_alt_text(page: Page):
+    page.goto("/demo/image", wait_until="networkidle")
+    expect(page.get_by_alt_text("这是图片")).to_be_visible()
+
+
+def test_get_by_test_id(page: Page, playwright:Playwright):
+    page.goto("/demo/image", wait_until="networkidle")
+    playwright.selectors.set_test_id_attribute("my_test_id")
+    expect(page.get_by_test_id("Howls Moving Castle")).to_be_visible()
+
+
+
